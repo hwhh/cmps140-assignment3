@@ -9,12 +9,12 @@ E = ([(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0)], (0, 1))
 NE = ([(3, 0), (4, 0), (5, 0), (5, 1), (5, 2), (5, 3)], (-1, 1))
 SE = ([(5, 3), (5, 4), (5, 5), (5, 6), (4, 6), (3, 6)], (-1, -1))
 
-scores = [[1, 2, 3, 5, 3, 2, 1],
-          [2, 4, 6, 8, 6, 4, 2],
-          [3, 6, 9, 10, 9, 6, 3],
-          [3, 6, 9, 10, 9, 6, 3],
-          [2, 4, 6, 8, 6, 4, 2],
-          [1, 2, 3, 5, 3, 2, 1]]
+scores = [[3, 4, 5, 7, 5, 4, 3],
+          [4, 6, 8, 10, 8, 6, 4],
+          [5, 8, 11, 13, 11, 8, 5],
+          [5, 8, 11, 13, 11, 8, 5],
+          [4, 6, 8, 10, 8, 6, 4],
+          [3, 4, 5, 7, 5, 4, 3]]
 
 infinity = float('inf')
 
@@ -87,122 +87,65 @@ class AIPlayer:
             if not np.array_equal(col, transposed_best_board[count]):
                 return count
 
-
-
-    def minimax(self, board):
-        moves = self.generate_moves(board, self.player_number)
-        best_move = moves[0]
-        best_score = float('-inf')
-        for move in moves:
-            score = self.min_play(move, 1)
-            if score > best_score:
-                best_move = move
-                best_score = score
-        return self.get_move(board, best_move)
-
-    def min_play(self, board, d):
-        if self.check_win(board) or d == 0:
-            return self.evaluation_function(board, 3, self.switch_player(self.player_number))
-        best_score = float('inf')
-        for move in self.generate_moves(board, self.switch_player(self.player_number)):
-            score = self.max_play(move, d-1)
-            if score < best_score:
-                best_move = move
-                best_score = score
-        return best_score
-
-    def max_play(self, board, d):
-        if self.check_win(board) or d == 0:
-            return self.evaluation_function(board, 3, self.player_number)
-        best_score = float('-inf')
-        for move in self.generate_moves(board, self.player_number):
-            score = self.min_play(move, d-1)
-            if score > best_score:
-                best_move = move
-                best_score = score
-        return best_score
-
     def get_alpha_beta_move(self, board):
-        best_move = self.rootAlphaBeta(board, 3, self.player_number)
-        return self.get_move(board, best_move)
-
-    def alphaBeta(self, board, alpha, beta, ply, player):
-        if ply == 0:
-            return self.evaluation_function(board, 3, player)
-        move_list = self.generate_moves(board, player)
-        for move in move_list:
-            current_eval = -self.alphaBeta(move, -beta, -alpha, ply - 1, self.switch_player(player))
-            if current_eval >= beta:
-                return beta
-            if current_eval > alpha:
-                alpha = current_eval
-
-        return alpha
-
-    def rootAlphaBeta(self, board, ply, player):
-        best_move = None
-        max_eval = float('-infinity')
-        move_list = self.generate_moves(board, player)
-        alpha = float('infinity')
-        for move in move_list:
-            alpha = -self.alphaBeta(move, float('-infinity'), alpha, ply - 1, self.switch_player(player))
-            if alpha > max_eval:
-                max_eval = alpha
-                best_move = move
-        return best_move
-
-    def get_alpha_beta_move(self, board):
-        alpha, beta, best_value = infinity, 1000000, -1000000
-        depth = 3
-        best_move = None
-        for move in self.generate_moves(board, self.player_number):
-            current_value = self.alpha_beta(move, depth - 1, alpha, beta, self.switch_player(self.player_number))
+        depth = 4
+        infinity = float('inf')
+        alpha = -infinity
+        beta = infinity
+        best_value = -infinity
+        best_turn = None
+        amap = {}
+        for (count, node) in enumerate(self.generate_moves(board, self.player_number)):
+            current_value = self.alphabeta(node, depth - 1, alpha, beta, self.switch_player(self.player_number))
+            amap[count] = (node, current_value)
             if current_value > best_value:
                 best_value = current_value
-                best_move = move
+                best_turn = node
+
             alpha = max(alpha, best_value)
             if beta <= alpha:
                 break
-        return self.get_move(board, best_move)
+        for key, value in amap.items():
+            print(value)
+            print('\n')
 
-    def alpha_beta(self, board, depth, alpha, beta, player):
-        if depth == 0:
+        return self.get_move(board, best_turn)
+
+    def alphabeta(self, node, depth, alpha, beta, player):
+        if depth == 0 or self.check_win(node):
             if player == self.player_number:
-                return self.evaluation_function(board, depth, self.switch_player(self.player_number))
+                return self.evaluation_function(node, 3, player)
             else:
-                return self.evaluation_function(board, depth, player)
-        elif player == self.player_number:
-            v = -1000000
-            for child in self.generate_moves(board, player):
-                v = max(v, self.alpha_beta(child, depth - 1, alpha, beta, self.switch_player(player)))
-                alpha = max(alpha, v)
+                return -self.evaluation_function(node, 3, player)
+        if player == self.player_number:
+            best_value = - math.inf - 1
+            for child in self.generate_moves(node, player):
+                best_value = max(best_value,
+                                 self.alphabeta(child, depth - 1, alpha, beta, self.switch_player(player)))
+                alpha = max(alpha, best_value)
                 if beta <= alpha:
                     break
-            return v
+            return best_value
+
         else:
-            v = 1000000
-            for child in self.generate_moves(board, player):
-                v = min(v, self.alpha_beta(child, depth - 1, alpha, beta, self.switch_player(player)))
-                alpha = min(beta, v)
+            best_value = math.inf
+            for child in self.generate_moves(node, player):
+                best_value = min(best_value,
+                                 self.alphabeta(child, depth - 1, alpha, beta, self.switch_player(player)))
+                beta = min(beta, best_value)
                 if beta <= alpha:
                     break
-            return v
+            return best_value
 
     def get_expectimax_move(self, board):
-        # first look at the
         return 0
 
     def evaluation_function(self, board, level, player):
-        # if self.check_win(board, self.player_number):
-        #     print(board)
-        #     return -100000000
-        # elif self.check_win(board, self.switch_player(self.player_number)):
-        #     print(board)
-        #     return 100000000
-        # else:
-        x = self.score_board(board, level, player)
-        y = self.score_board(board, level, self.switch_player(player))
-        return x-y
+        if self.check_win(board) == player:
+            return 100000000
+        elif self.check_win(board) == self.switch_player(player):
+            return -100000000
+        return self.score_board(board, level, player) - self.score_board(board, level, self.switch_player(player))
 
     def score_board(self, board, level, player):
         score = 0
@@ -212,71 +155,61 @@ class AIPlayer:
         return score
 
     def score_line(self, line, direction, board, player):
-        line_score = 0
-        for start in range(0, len(line) - 3):
-            partial_line = line[start:start + 4]
-            if not self.check_empty(partial_line, board):
-                line_score += self.score_partial_line(partial_line, direction, board, player)
-        return line_score
-
-    # TODO Check the distance away in the line
-    def score_partial_line(self, partial_line, direction, board, player):
-        partial_line_score = 0
-        square_scores = 0
-        for (x, y) in partial_line:
+        score = 0
+        for (x, y) in line:
             if board[x][y] == player:
-                square_scores += 0  # scores[x][y]
-                partial_line_score += 1
+                score += 1
             elif board[x][y] == self.switch_player(player):
                 return 0
-        dis = self.distance(board, partial_line, direction)
-        if partial_line_score == 4:
-            return square_scores + (partial_line_score ** 5) - dis
-        elif partial_line_score == 3:
-            return square_scores + (partial_line_score ** 4) - dis
-        elif partial_line_score == 2:
-            return square_scores + (partial_line_score ** 3) - dis
-        elif partial_line_score == 1:
-            return square_scores + (partial_line_score ** 2) - dis
+        return self.score_partial(line, direction, board)
+
+    def score_partial(self, partial_line, direction, board):
+        count = np.count_nonzero(partial_line)
+        if count == 0:
+            return -1
+        elif count == 4:
+            return (count ** 4) - (self.distance(partial_line, direction, board))
+        elif count == 3:
+            return (count ** 3) - (self.distance(partial_line, direction, board))
         else:
-            return square_scores + partial_line_score - dis
+            return (count ** 2) - (self.distance(partial_line, direction, board))
 
     @staticmethod
-    def distance(board, line, direction):
+    def check_openings(line):
+        pass
+
+    @staticmethod
+    def distance(partial_line, direction, board):
         distance = 0
-        if direction[0] != 0 and direction[1] != 0:  # DIAGONAL
-            for (x, y) in line:
-                while board[x][y] == 0 and 0 <= x < 5:
-                    distance += 1
-                    x += 1
-            return distance
-        else:
-            for (x, y) in line:
-                if board[x][y] == 0:
-                    distance += 1
-            return distance
+        if direction == (0, 1):  # If its a vertical line
+            return np.count_nonzero(partial_line)
+        for (x, y) in partial_line:
+            while x <= 5 and board[x][y] != 0:
+                x += 1
+                distance += 1
+        return distance
 
     @staticmethod
     def check_win(board):
-        boardHeight = len(board[0])
-        boardWidth = len(board)
+        board_height = len(board[0])
+        board_width = len(board)
         # check horizontal spaces
-        for y in range(boardHeight):
-            for x in range(boardWidth - 3):
+        for y in range(board_height):
+            for x in range(board_width - 3):
                 if board[x][y] == 1 and board[x + 1][y] == 1 and board[x + 2][y] == 1 and board[x + 3][y] == 1:
                     return 1
                 elif board[x][y] == 2 and board[x + 1][y] == 2 and board[x + 2][y] == 2 and board[x + 3][y] == 2:
                     return 2
         # check vertical spaces
-        for x in range(boardWidth):
-            for y in range(boardHeight - 3):
+        for x in range(board_width):
+            for y in range(board_height - 3):
                 if board[x][y] == 1 and board[x][y + 1] == 1 and board[x][y + 2] == 1 and board[x][y + 3] == 1:
                     return 1
                 if board[x][y] == 2 and board[x][y + 1] == 2 and board[x][y + 2] == 2 and board[x][y + 3] == 2:
                     return 2
         # check / diagonal spaces
-        for x in range(boardWidth - 3):
-            for y in range(3, boardHeight):
+        for x in range(board_width - 3):
+            for y in range(3, board_height):
                 if board[x][y] == 1 and board[x + 1][y - 1] == 1 and board[x + 2][y - 2] == 1 and board[x + 3][
                     y - 3] == 1:
                     return 1
@@ -284,8 +217,8 @@ class AIPlayer:
                     y - 3] == 2:
                     return 2
         # check \ diagonal spaces
-        for x in range(boardWidth - 3):
-            for y in range(boardHeight - 3):
+        for x in range(board_width - 3):
+            for y in range(board_height - 3):
                 if board[x][y] == 1 and board[x][y + 1] == 1 and board[x][y + 2] == 1 and board[x][y + 3] == 1:
                     return 1
                 elif board[x][y] == 2 and board[x][y + 1] == 2 and board[x][y + 2] == 2 and board[x][y + 3] == 2:
@@ -366,11 +299,11 @@ class HumanPlayer:
 """
 
 b1 = [[0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 2, 2, 0, 0, 0],
-              [0, 0, 1, 1, 1, 0, 0]]
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 1, 0, 0, 0, 0],
+      [0, 0, 2, 0, 0, 0, 0],
+      [0, 0, 2, 0, 0, 0, 0],
+      [0, 0, 1, 0, 0, 0, 1]]
 
         b2 = [[0, 0, 0, 0, 0, 0, 0],
               [0, 0, 0, 0, 0, 0, 0],

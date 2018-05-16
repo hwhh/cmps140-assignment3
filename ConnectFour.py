@@ -20,6 +20,13 @@ class Game:
         self.colors = ['yellow', 'red']
         self.current_turn = 0
         self.board = np.zeros([6,7]).astype(np.uint8)
+
+        # self.board = np.array([[0, 0, 0, 0, 0, 0, 0],
+        #                        [0, 0, 0, 0, 1, 0, 0],
+        #                        [0, 1, 0, 0, 2, 0, 0],
+        #                        [0, 1, 1, 0, 1, 0, 0],
+        #                        [0, 2, 2, 2, 1, 0, 0],
+        #                        [2, 1, 2, 1, 2, 0, 0]])
         self.gui_board = []
         self.game_over = False
         self.ai_turn_limit = time
@@ -47,12 +54,12 @@ class Game:
             current_player = self.players[self.current_turn]
 
             if current_player.type == 'ai':
-                
+
                 if self.players[int(not self.current_turn)].type == 'random':
-                    p_func = current_player.get_expectimax_move
+                    p_func = current_player.get_alpha_beta_move
                 else:
                     p_func = current_player.get_alpha_beta_move
-                
+
                 try:
                     recv_end, send_end = mp.Pipe(False)
                     p = mp.Process(target=turn_worker, args=(self.board, send_end, p_func))
@@ -116,7 +123,7 @@ class Game:
         def check_diagonal(b):
             for op in [None, np.fliplr]:
                 op_board = op(b) if op else b
-                
+
                 root_diag = np.diagonal(op_board, offset=0).astype(np.int)
                 if player_win_str in to_str(root_diag):
                     return True
