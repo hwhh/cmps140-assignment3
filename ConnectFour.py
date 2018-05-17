@@ -7,9 +7,11 @@ import tkinter as tk
 import numpy as np
 
 # Local libs
-from Player import AIPlayer, RandomPlayer, HumanPlayer
+from Player import AI
+from PlayerOld import AIPlayer, RandomPlayer, HumanPlayer
 
-#https://stackoverflow.com/a/37737985
+
+# https://stackoverflow.com/a/37737985
 def turn_worker(board, send_end, p_func):
     send_end.send(p_func(board))
 
@@ -19,19 +21,15 @@ class Game:
         self.players = [player1, player2]
         self.colors = ['yellow', 'red']
         self.current_turn = 0
-        self.board = np.zeros([6,7]).astype(np.uint8)
 
-        # self.board = np.array([[0, 0, 0, 0, 0, 0, 0],
-        #                        [0, 0, 0, 0, 1, 0, 0],
-        #                        [0, 1, 0, 0, 2, 0, 0],
-        #                        [0, 1, 1, 0, 1, 0, 0],
-        #                        [0, 2, 2, 2, 1, 0, 0],
-        #                        [2, 1, 2, 1, 2, 0, 0]])
+        self.board = np.zeros([6, 7]).astype(np.uint8)
+        self.BITBOARDS = [0, 0]
+
         self.gui_board = []
         self.game_over = False
         self.ai_turn_limit = time
 
-        #https://stackoverflow.com/a/38159672
+        # https://stackoverflow.com/a/38159672
         root = tk.Tk()
         root.title('Connect 4')
         self.player_string = tk.Label(root, text=player1.player_string)
@@ -42,25 +40,44 @@ class Game:
         for row in range(0, 700, 100):
             column = []
             for col in range(0, 700, 100):
-                column.append(self.c.create_oval(row, col, row+100, col+100, fill=''))
+                column.append(self.c.create_oval(row, col, row + 100, col + 100, fill=''))
             self.gui_board.append(column)
 
         tk.Button(root, text='Next Move', command=self.make_move).pack()
 
         root.mainloop()
 
+    def placeToken(self, col):
+        """
+        Argument:
+        col : the column number by default an int between [0,6] where a token
+        is requested to be placed.
+
+        Return: 1 if the placed token wins the game 2 if draw, 0 otherwise
+
+        """
+        if col < 0:  # invalid column
+            return False
+        piece_col = self.board[col]
+        y = 0
+        for piece in piece_col:
+            if not piece:  # if the column has an empty space
+                self.players[self.current_turn].flipBit(self, self.current_turn, col, y)
+                return
+            y += 1
+        return  # if the column is full, return False
+
     def make_move(self):
         if not self.game_over:
             current_player = self.players[self.current_turn]
 
             if current_player.type == 'ai':
-
                 if self.players[int(not self.current_turn)].type == 'random':
-                    p_func = current_player.get_alpha_beta_move
+                    p_func = current_player.get_expectimax_move
                 else:
                     p_func = current_player.get_alpha_beta_move
 
-                try:
+                try:  # TODO Change this back to hand in just board
                     recv_end, send_end = mp.Pipe(False)
                     p = mp.Process(target=turn_worker, args=(self.board, send_end, p_func))
                     p.start()
@@ -71,6 +88,10 @@ class Game:
                     print(e.with_traceback())
 
                 move = recv_end.recv()
+
+                # if move >= 0:
+                #     self.placeToken(move)
+
             else:
                 move = current_player.get_move(self.board)
 
@@ -87,13 +108,13 @@ class Game:
                 self.player_string.configure(text=self.players[self.current_turn].player_string)
 
     def update_board(self, move, player_num):
-        if 0 in self.board[:,move]:
+        if 0 in self.board[:, move]:
             update_row = -1
             for row in range(1, self.board.shape[0]):
                 update_row = -1
-                if self.board[row, move] > 0 and self.board[row-1, move] == 0:
-                    update_row = row-1
-                elif row==self.board.shape[0]-1 and self.board[row, move] == 0:
+                if self.board[row, move] > 0 and self.board[row - 1, move] == 0:
+                    update_row = row - 1
+                elif row == self.board.shape[0] - 1 and self.board[row, move] == 0:
                     update_row = row
 
                 if update_row >= 0:
@@ -104,7 +125,6 @@ class Game:
         else:
             err = 'Invalid move by player {}. Column {}'.format(player_num, move)
             raise Exception(err)
-
 
     def game_completed(self, player_num):
         player_win_str = '{0}{0}{0}{0}'.format(player_num)
@@ -128,7 +148,7 @@ class Game:
                 if player_win_str in to_str(root_diag):
                     return True
 
-                for i in range(1, b.shape[1]-3):
+                for i in range(1, b.shape[1] - 3):
                     for offset in [i, -i]:
                         diag = np.diagonal(op_board, offset=offset)
                         diag = to_str(diag.astype(np.int))
@@ -142,7 +162,6 @@ class Game:
                 check_diagonal(board))
 
 
-
 def main(player1, player2, time):
     """
     Creates player objects based on the string paramters that are passed
@@ -152,12 +171,13 @@ def main(player1, player2, time):
     player1 - a string ['ai', 'random', 'human']
     player2 - a string ['ai', 'random', 'human']
     """
+
     def make_player(name, num):
-        if name=='ai':
+        if name == 'ai':
             return AIPlayer(num)
-        elif name=='random':
+        elif name == 'random':
             return RandomPlayer(num)
-        elif name=='human':
+        elif name == 'human':
             return HumanPlayer(num)
 
     Game(make_player(player1, 1), make_player(player2, 2), time)
@@ -174,11 +194,10 @@ def play_game(player1, player2):
     RETURNS:
     None
     """
-    board = np.zeros([6,7])
+    board = np.zeros([6, 7])
 
 
-
-if __name__=='__main__':
+if __name__ == '__main__':
     player_types = ['ai', 'random', 'human']
     parser = argparse.ArgumentParser()
     parser.add_argument('player1', choices=player_types)
