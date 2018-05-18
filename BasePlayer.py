@@ -2,7 +2,7 @@
 class BasePlayer:
     def __init__(self, name, isAI):
         """
-        BasePlayer is inherited by PlayerOld.py for Human and AI, it contains
+        BasePlayer is inherited by Player.py for Human and AI, it contains
         variables and functions useful to both classes.
 
         name is the name of the player (e.g. "CPU", "Human")

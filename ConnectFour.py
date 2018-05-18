@@ -7,8 +7,8 @@ import tkinter as tk
 import numpy as np
 
 # Local libs
-from Player import AI
-from PlayerOld import AIPlayer, RandomPlayer, HumanPlayer
+from PlayerBitBoard import AI
+from Player import AIPlayer, RandomPlayer, HumanPlayer
 
 
 # https://stackoverflow.com/a/37737985
@@ -47,18 +47,11 @@ class Game:
 
         root.mainloop()
 
-    def placeToken(self, col):
-        """
-        Argument:
-        col : the column number by default an int between [0,6] where a token
-        is requested to be placed.
-
-        Return: 1 if the placed token wins the game 2 if draw, 0 otherwise
-
-        """
+    def place_token(self, col):
         if col < 0:  # invalid column
             return False
-        piece_col = self.board[col]
+        transposed_board = (list(map(list, zip(*self.board))))
+        piece_col = list(reversed(transposed_board[col]))
         y = 0
         for piece in piece_col:
             if not piece:  # if the column has an empty space
@@ -73,13 +66,18 @@ class Game:
 
             if current_player.type == 'ai':
                 if self.players[int(not self.current_turn)].type == 'random':
-                    p_func = current_player.get_expectimax_move
+                    p_func = current_player.get_expectimax_move  # TODO Change this back to hand in just board
+                    borad = self.board
+                elif isinstance(current_player, AI):
+                    p_func = current_player.play
+                    board = self
                 else:
-                    p_func = current_player.get_alpha_beta_move
-
-                try:  # TODO Change this back to hand in just board
+                    p_func = current_player.get_alpha_beta_move  # TODO Change this back to hand in just board
+                    borad = self.board
+                try:
                     recv_end, send_end = mp.Pipe(False)
-                    p = mp.Process(target=turn_worker, args=(self.board, send_end, p_func))
+                    p = mp.Process(target=turn_worker,
+                                   args=(board, send_end, p_func))  # TODO Change this back to hand in just board
                     p.start()
                     p.join(self.ai_turn_limit)
                 except Exception as e:
@@ -88,12 +86,11 @@ class Game:
                     print(e.with_traceback())
 
                 move = recv_end.recv()
-
-                # if move >= 0:
-                #     self.placeToken(move)
-
             else:
                 move = current_player.get_move(self.board)
+
+            if move >= 0 and isinstance(current_player, AI):  # TODO Change this back to hand in just board
+                self.place_token(move)
 
             if move is not None:
                 self.update_board(int(move), current_player.player_number)
@@ -174,7 +171,7 @@ def main(player1, player2, time):
 
     def make_player(name, num):
         if name == 'ai':
-            return AIPlayer(num)
+            return AIPlayer(num)  # TODO Change this back to hand in just board
         elif name == 'random':
             return RandomPlayer(num)
         elif name == 'human':
