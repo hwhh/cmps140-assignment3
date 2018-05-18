@@ -91,25 +91,25 @@ class AIPlayer:
         depth = 4
         alpha, beta, best_value = -infinity, infinity, -infinity
 
-        b1 = [[0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 1, 0, 0, 0]]
-        b2 = [[0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 1, 0, 0]]
-
-        x = self.evaluation_function(b1, 1, self.player_number)
-        y = self.evaluation_function(b2, 1, self.player_number)
+        # b1 = [[0, 0, 0, 0, 0, 0, 0],
+        #       [0, 0, 0, 0, 0, 0, 0],
+        #       [0, 0, 0, 0, 0, 0, 0],
+        #       [0, 0, 0, 0, 0, 0, 0],
+        #       [0, 0, 0, 0, 0, 0, 0],
+        #       [0, 0, 0, 1, 0, 0, 0]]
+        # b2 = [[0, 0, 0, 0, 0, 0, 0],
+        #       [0, 0, 0, 0, 0, 0, 0],
+        #       [0, 0, 0, 0, 0, 0, 0],
+        #       [0, 0, 0, 0, 0, 0, 0],
+        #       [0, 0, 0, 0, 0, 0, 0],
+        #       [0, 0, 0, 0, 1, 0, 0]]
+        #
+        # x = self.evaluation_function(b1, 1, self.player_number)
+        # y = self.evaluation_function(b2, 1, self.player_number)
 
         best_turn = None
         for (count, node) in enumerate(self.generate_moves(board, self.player_number)):
-            current_value = self.alphabeta(node, depth - 1, alpha, beta, self.switch_player(self.player_number))
+            current_value = self.alphabeta(node, depth - 1, 1, alpha, beta, self.switch_player(self.player_number))
             if current_value > best_value:
                 best_value = current_value
                 best_turn = node
@@ -118,17 +118,17 @@ class AIPlayer:
                 break
         return self.get_move(board, best_turn)
 
-    def alphabeta(self, node, depth, alpha, beta, player):
+    def alphabeta(self, node, depth, level, alpha, beta, player):
         if depth == 0 or self.check_win(node):
             if player == self.player_number:
-                return self.evaluation_function(node, 3, player)
+                return self.evaluation_function(node, level, player)
             else:
-                return -self.evaluation_function(node, 3, player)
+                return -self.evaluation_function(node, level, player)
         if player == self.player_number:
             best_value = -infinity
             for child in self.generate_moves(node, player):
                 best_value = max(best_value,
-                                 self.alphabeta(child, depth - 1, alpha, beta, self.switch_player(player)))
+                                 self.alphabeta(child, depth - 1, level + 1, alpha, beta, self.switch_player(player)))
                 alpha = max(alpha, best_value)
                 if beta <= alpha:
                     break
@@ -138,7 +138,7 @@ class AIPlayer:
             best_value = infinity
             for child in self.generate_moves(node, player):
                 best_value = min(best_value,
-                                 self.alphabeta(child, depth - 1, alpha, beta, self.switch_player(player)))
+                                 self.alphabeta(child, depth - 1, level + 1, alpha, beta, self.switch_player(player)))
                 beta = min(beta, best_value)
                 if beta <= alpha:
                     break
@@ -149,7 +149,7 @@ class AIPlayer:
         alpha, beta, best_value = -infinity, infinity, -infinity
         best_turn = None
         for (count, node) in enumerate(self.generate_moves(board, self.player_number)):
-            current_value = self.expectimax(node, depth - 1, self.switch_player(self.player_number), True, alpha, beta)
+            current_value = self.expectimax(node, depth - 1, 1, self.switch_player(self.player_number), True, alpha, beta)
             if current_value > best_value:
                 best_value = current_value
                 best_turn = node
@@ -158,24 +158,24 @@ class AIPlayer:
                 break
         return self.get_move(board, best_turn)
 
-    def expectimax(self, node, depth, player, chance_node, alpha, beta):
+    def expectimax(self, node, depth, level, player, chance_node, alpha, beta):
         if depth == 0 or self.check_win(node):
             if player == self.player_number:
-                return self.evaluation_function(node, 3, player)
+                return self.evaluation_function(node, level, player)
             else:
-                return -self.evaluation_function(node, 3, player)
+                return -self.evaluation_function(node, level, player)
         elif chance_node:
             alpha = 0
             children = self.generate_moves(node, player)
             for child in children:
-                alpha += ((1 / len(child)) * self.expectimax(child, depth - 1, self.switch_player(player), False, alpha,
+                alpha += ((1 / len(child)) * self.expectimax(child, depth - 1, level + 1, self.switch_player(player), False, alpha,
                                                              beta))
             return alpha
         else:
             best_value = -infinity
             for child in self.generate_moves(node, player):
                 best_value = max(best_value,
-                                 self.expectimax(child, depth - 1, self.switch_player(player), True, alpha, beta))
+                                 self.expectimax(child, depth - 1, level + 1, self.switch_player(player), True, alpha, beta))
                 alpha = max(alpha, best_value)
                 if beta <= alpha:
                     break
@@ -191,29 +191,40 @@ class AIPlayer:
     def score_board(self, board, level, player):
         score = 0
         for (line, direction) in self.lines:
-            if not self.check_empty(line, board):  # optimisation
-                score += self.score_line(line, direction, board, player) - 0  # (level * 2)
+            if not self.check_empty(line, board):
+                score += self.score_line(line, direction, board, player)
         return score
 
     def score_line(self, line, direction, board, player):
-        score = 0
-        for (x, y) in line:
+        line_score = 0
+        for start in range(0, len(line) - 3):
+            partial_line = line[start:start + 4]
+            if not self.check_empty(partial_line, board):
+                line_score += self.score_partial_line(partial_line, direction, board, player)
+        return line_score
+
+        # TODO Check the distance away in the line
+
+    def score_partial_line(self, partial_line, direction, board, player):
+        partial_line_score = 0
+        square_scores = 0
+        for (x, y) in partial_line:
             if board[x][y] == player:
-                score += 1
+                square_scores += scores[x][y]
+                partial_line_score += 1
             elif board[x][y] == self.switch_player(player):
                 return 0
-        return self.score_partial(score, line, direction, board)
+        return self.generate_score(partial_line_score, partial_line, direction, board) + square_scores
 
-    def score_partial(self, score, partial_line, direction, board):
-        # count = np.count_nonzero(partial_line)
+    def generate_score(self, score, partial_line, direction, board):
         if score == 0:
-            return 1
+            return 100 - (self.distance(partial_line, direction, board))
         elif score >= 4:
-            return (score ** 4) - 0  # (self.distance(partial_line, direction, board))
+            return (score * 100) - (self.distance(partial_line, direction, board))
         elif score == 3:
-            return (score ** 3) - 0  # (self.distance(partial_line, direction, board))
+            return (score * 100) - (self.distance(partial_line, direction, board))
         else:
-            return (score ** 2) - 0  # (self.distance(partial_line, direction, board))
+            return (score * 100) - (self.distance(partial_line, direction, board))
 
     @staticmethod
     def check_openings(line):
