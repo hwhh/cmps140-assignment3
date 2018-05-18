@@ -90,6 +90,23 @@ class AIPlayer:
     def get_alpha_beta_move(self, board):
         depth = 4
         alpha, beta, best_value = -infinity, infinity, -infinity
+
+        b1 = [[0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 1, 0, 0, 0]]
+        b2 = [[0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 1, 0, 0]]
+
+        x = self.evaluation_function(b1, 1, self.player_number)
+        y = self.evaluation_function(b2, 1, self.player_number)
+
         best_turn = None
         for (count, node) in enumerate(self.generate_moves(board, self.player_number)):
             current_value = self.alphabeta(node, depth - 1, alpha, beta, self.switch_player(self.player_number))
@@ -151,7 +168,8 @@ class AIPlayer:
             alpha = 0
             children = self.generate_moves(node, player)
             for child in children:
-                alpha += ((1 / len(child)) * self.expectimax(child, depth - 1, self.switch_player(player), False, alpha, beta))
+                alpha += ((1 / len(child)) * self.expectimax(child, depth - 1, self.switch_player(player), False, alpha,
+                                                             beta))
             return alpha
         else:
             best_value = -infinity
@@ -173,8 +191,8 @@ class AIPlayer:
     def score_board(self, board, level, player):
         score = 0
         for (line, direction) in self.lines:
-            # if not self.check_empty(line, board):  # optimisation
-            score += self.score_line(line, direction, board, player) - (level * 2)
+            if not self.check_empty(line, board):  # optimisation
+                score += self.score_line(line, direction, board, player) - 0  # (level * 2)
         return score
 
     def score_line(self, line, direction, board, player):
@@ -184,18 +202,18 @@ class AIPlayer:
                 score += 1
             elif board[x][y] == self.switch_player(player):
                 return 0
-        return self.score_partial(line, direction, board)
+        return self.score_partial(score, line, direction, board)
 
-    def score_partial(self, partial_line, direction, board):
-        count = np.count_nonzero(partial_line)
-        if count == 0:
-            return -1
-        elif count >= 4:
-            return (count ** 4) - (self.distance(partial_line, direction, board))
-        elif count == 3:
-            return (count ** 3) - (self.distance(partial_line, direction, board))
+    def score_partial(self, score, partial_line, direction, board):
+        # count = np.count_nonzero(partial_line)
+        if score == 0:
+            return 1
+        elif score >= 4:
+            return (score ** 4) - 0  # (self.distance(partial_line, direction, board))
+        elif score == 3:
+            return (score ** 3) - 0  # (self.distance(partial_line, direction, board))
         else:
-            return (count ** 2) - (self.distance(partial_line, direction, board))
+            return (score ** 2) - 0  # (self.distance(partial_line, direction, board))
 
     @staticmethod
     def check_openings(line):
@@ -291,7 +309,7 @@ class HumanPlayer:
         """
         Flip the bit at the x/y location.
         """
-        board.BITBOARDS[p] |= (1 << (x*7 + y))
+        board.BITBOARDS[p] |= (1 << (x * 7 + y))
 
     def get_move(self, board):
         """

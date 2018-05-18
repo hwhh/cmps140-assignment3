@@ -67,17 +67,17 @@ class Game:
             if current_player.type == 'ai':
                 if self.players[int(not self.current_turn)].type == 'random':
                     p_func = current_player.get_expectimax_move  # TODO Change this back to hand in just board
-                    borad = self.board
+                    var = self.board
                 elif isinstance(current_player, AI):
                     p_func = current_player.play
-                    board = self
+                    var = self
                 else:
                     p_func = current_player.get_alpha_beta_move  # TODO Change this back to hand in just board
-                    borad = self.board
+                    var = self.board
                 try:
                     recv_end, send_end = mp.Pipe(False)
                     p = mp.Process(target=turn_worker,
-                                   args=(board, send_end, p_func))  # TODO Change this back to hand in just board
+                                   args=(var, send_end, p_func))  # TODO Change this back to hand in just board
                     p.start()
                     p.join(self.ai_turn_limit)
                 except Exception as e:
