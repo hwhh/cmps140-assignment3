@@ -26,6 +26,7 @@ class AIPlayer:
         self.type = 'ai'
         self.player_string = 'Player {}:ai'.format(player_number)
         self.lines = self.create_lines(self)
+        self.ab_count = 0
 
     @staticmethod
     def switch_player(player):
@@ -88,19 +89,95 @@ class AIPlayer:
                 return count
 
     def get_alpha_beta_move(self, board):
-        depth = 6
-        alpha, beta, best_value = -infinity, infinity, -infinity
-        turns = self.generate_moves(board, self.player_number)
-        best_turn = turns[0]
-        for (count, node) in enumerate(turns):
-            current_value = self.alphabeta(node, depth - 1, depth, alpha, beta, self.switch_player(self.player_number))
-            if current_value > best_value:
-                best_value = current_value
-                best_turn = node
-            alpha = max(alpha, best_value)
-            if beta <= alpha:
-                break
-        return self.get_move(board, best_turn)
+
+        b = np.array([[0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0],
+                      [0, 1, 0, 0, 0, 0, 0],
+                      [0, 0, 1, 0, 0, 0, 0],
+                      [0, 0, 0, 1, 0, 0, 0],
+                      [0, 0, 0, 0, 1, 0, 0]])
+        x = self.check_win(b)
+        b = np.array([[0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0],
+                      [2, 0, 0, 0, 0, 0, 0],
+                      [2, 0, 0, 0, 0, 0, 0],
+                      [2, 0, 0, 0, 0, 0, 0],
+                      [2, 0, 0, 0, 0, 0, 0]])
+        x = self.check_win(b)
+        b = np.array([[0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0]])
+        x = self.check_win(b)
+        b = np.array([[0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0]])
+        x = self.check_win(b)
+        b = np.array([[0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0],
+                      [1, 1, 1, 1, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0]])
+        x = self.check_win(b)
+        b = np.array([[0, 0, 0, 2, 0, 0, 0],
+                      [0, 0, 2, 0, 0, 0, 0],
+                      [0, 2, 0, 0, 0, 0, 0],
+                      [2, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0]])
+        x = self.check_win(b)
+        b = np.array([[0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 1],
+                      [0, 0, 0, 0, 0, 1, 0],
+                      [0, 0, 0, 0, 1, 0, 0],
+                      [0, 0, 0, 1, 0, 0, 0]])
+        x = self.check_win(b)
+        b = np.array([[0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 1, 0, 0, 0],
+                      [0, 0, 0, 1, 0, 0, 0],
+                      [0, 0, 0, 1, 0, 0, 0],
+                      [0, 0, 0, 1, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0]])
+        x = self.check_win(b)
+        b = np.array([[0, 0, 0, 1, 1, 1, 1],
+                      [0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0]])
+        x = self.check_win(b)
+        b = np.array([[0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0]])
+
+        x = self.check_win(b)
+        return 0
+        # depth = 6
+        # alpha, beta, best_value = -infinity, infinity, -infinity
+        # turns = self.generate_moves(board, self.player_number)
+        # best_turn = turns[0]
+        # for (count, node) in enumerate(turns):
+        #     current_value = self.alphabeta(node, depth - 1, depth, alpha, beta, self.switch_player(self.player_number))
+        #     self.ab_count += 1
+        #     if current_value > best_value:
+        #         best_value = current_value
+        #         best_turn = node
+        #     alpha = max(alpha, best_value)
+        #     if beta <= alpha:
+        #         break
+        # print(self.ab_count)
+        # self.ab_count = 0
+        # return self.get_move(board, best_turn)
 
     def alphabeta(self, node, depth, level, alpha, beta, player):
         if depth == 0 and level % 2 == 0:
@@ -108,10 +185,11 @@ class AIPlayer:
         elif depth == 0 and level % 2 != 0:
             return self.evaluation_function(node, level, self.switch_player(player))
         elif self.check_win(node) > 0:
-            return self.evaluation_function(node, level, player)
+            return self.evaluation_function(node, level, self.player_number)
         if player == self.player_number:
             best_value = -infinity
             for child in self.generate_moves(node, player):
+                self.ab_count += 1
                 best_value = max(best_value,
                                  self.alphabeta(child, depth - 1, level, alpha, beta, self.switch_player(player)))
                 alpha = max(alpha, best_value)
@@ -121,6 +199,7 @@ class AIPlayer:
         else:
             best_value = infinity
             for child in self.generate_moves(node, player):
+                self.ab_count += 1
                 best_value = min(best_value,
                                  self.alphabeta(child, depth - 1, level, alpha, beta, self.switch_player(player)))
                 beta = min(beta, best_value)
@@ -144,13 +223,20 @@ class AIPlayer:
                 break
         return self.get_move(board, best_turn)
 
+    """
+    if self.check_win(node) == player == self.player_number:
+        return 1000000
+    elif self.check_win(node) == player == self.switch_player(self.player_number):
+        return -1000000
+    """
+
     def expectimax(self, node, depth, level, player, chance_node, alpha, beta):
         if depth == 0 and level % 2 == 0:
             return self.evaluation_function(node, level, player)
         elif depth == 0 and level % 2 != 0:
             return self.evaluation_function(node, level, self.switch_player(player))
-        elif self.check_win(node) > 0:
-            return self.evaluation_function(node, level, player)
+        # elif self.check_win(node) > 0:
+        #     return self.evaluation_function(node, level, player)
         elif chance_node:
             alpha = 0
             children = self.generate_moves(node, player)
@@ -174,7 +260,7 @@ class AIPlayer:
             return 10000000
         elif self.check_win(board) == self.switch_player(player):
             return -10000000
-        return self.score_board(board, level, player) #- self.score_board(board, level, self.switch_player(player))
+        return self.score_board(board, level, player)  # - self.score_board(board, level, self.switch_player(player))
 
     def score_board(self, board, level, player):
         score = 0
@@ -227,39 +313,21 @@ class AIPlayer:
                 distance += 1
         return distance
 
-    @staticmethod
-    def check_win(board):
-        board_height = len(board[0])
-        board_width = len(board)
-        # check horizontal spaces
-        for y in range(board_height):
-            for x in range(board_width - 3):
-                if board[x][y] == 1 and board[x + 1][y] == 1 and board[x + 2][y] == 1 and board[x + 3][y] == 1:
+    def check_win(self, board):
+        one, two = 0, 0
+        for (line, (d1, d2)) in self.lines:
+            for (x, y) in line:
+                if board[x][y] == 1:
+                    one += 1
+                    two = 0
+                elif board[x][y] == 2:
+                    one = 0
+                    two += 1
+                else:
+                    one, two = 0, 0
+                if one >= 4:
                     return 1
-                elif board[x][y] == 2 and board[x + 1][y] == 2 and board[x + 2][y] == 2 and board[x + 3][y] == 2:
-                    return 2
-        # check vertical spaces
-        for x in range(board_width):
-            for y in range(board_height - 3):
-                if board[x][y] == 1 and board[x][y + 1] == 1 and board[x][y + 2] == 1 and board[x][y + 3] == 1:
-                    return 1
-                if board[x][y] == 2 and board[x][y + 1] == 2 and board[x][y + 2] == 2 and board[x][y + 3] == 2:
-                    return 2
-        # check / diagonal spaces
-        for x in range(board_width - 3):
-            for y in range(3, board_height):
-                if board[x][y] == 1 and board[x + 1][y - 1] == 1 and board[x + 2][y - 2] == 1 and board[x + 3][
-                    y - 3] == 1:
-                    return 1
-                elif board[x][y] == 2 and board[x + 1][y - 1] == 2 and board[x + 2][y - 2] == 2 and board[x + 3][
-                    y - 3] == 2:
-                    return 2
-        # check \ diagonal spaces
-        for x in range(board_width - 3):
-            for y in range(board_height - 3):
-                if board[x][y] == 1 and board[x][y + 1] == 1 and board[x][y + 2] == 1 and board[x][y + 3] == 1:
-                    return 1
-                elif board[x][y] == 2 and board[x][y + 1] == 2 and board[x][y + 2] == 2 and board[x][y + 3] == 2:
+                elif two >= 4:
                     return 2
         return 0
 
