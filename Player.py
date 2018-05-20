@@ -117,7 +117,7 @@ class AIPlayer:
         #                   [1, 0, 1, 1, 1, 0, 2],
         #                   [2, 0, 2, 1, 1, 0, 2]])
 
-        depth = 6
+        depth = 4
         alpha, beta, best_value = -infinity, infinity, -infinity
         turns = self.generate_moves(board, self.player_number)
         best_turn = turns[0]
